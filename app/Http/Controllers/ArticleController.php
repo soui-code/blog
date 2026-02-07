@@ -1,9 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Article;
 
 use Illuminate\Http\Request;
+// use App\Http\Policies\ArticlePolicy;
 
 class ArticleController extends Controller
 {
@@ -13,15 +15,20 @@ class ArticleController extends Controller
     public function index()
     {
         $articles = Article::latest()->get();
-        return view('articles.index',compact('articles'));
+        return view('articles.index', compact('articles'));
     }
+
+    // public function myarticle(){
+    //     $articles = auth()->user()->article()->latest()->get();
+    //     return view('articles.show',compact('articles'));
+    // }
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-       return view('articles.create');
+        return view('articles.create');
     }
 
     /**
@@ -29,22 +36,22 @@ class ArticleController extends Controller
      */
     public function store(Request $request)
     {
-        // $user = User::first();
-        // $article = $user->articles()->create([
-        //   'title' => "Premier connexion",
-        //   'content' => "Allons seulement",
-        //   "date_publication"=> now(),
-        // ]);
-        // return $article;  
+        $imagePath = null;
+
         $request->validate([
-          'title' => 'required|min:3',
-          'content' => 'required'
+            'title' => 'required|min:3',
+            'content' => 'required',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png|max:2048'
         ]);
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('articles', 'public');
+        }
         Article::create([
-          'title' => $request->title,
-          'content' => $request->content,
-          'user_id' => auth()->id(),
-        ]) ;
+            'title' => $request->title,
+            'content' => $request->content,
+            'image' => $imagePath ?? null,
+            'user_id' => auth()->id(),
+        ]);
         return redirect()->route('articles.index');
     }
 
@@ -53,7 +60,8 @@ class ArticleController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $article = Article::findOrFail($id);
+        return view('articles.show', compact('article'));
     }
 
     /**
@@ -61,7 +69,8 @@ class ArticleController extends Controller
      */
     public function edit(string $id)
     {
-        return view('articles.edit',compact('articles'));
+        $articles = Article::findOrFail($id);
+        return view('articles.edit', compact('articles'));
     }
 
     /**
@@ -69,15 +78,23 @@ class ArticleController extends Controller
      */
     public function update(Request $request, Article $article)
     {
+        // $this->authorize('update', $article);
+        $path = null;
+
         $request->validate([
-          'title'=> 'required|min:3',
-          'content'=> 'required'
+            'title' => 'required|min:3',
+            'content' => 'required',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ]);
-        $article->update([ 
-          'title'=> $request->title,
-          'content'=> $request->content
-         ]);
-        return redirect()->route('articles.index')->with('success','Modifiée avec sucess');
+        $data = [
+            'title' => $request->title,
+            'content' => $request->content,
+        ];
+        if($request->hasFile('image')){
+            $data['image'] = $request->file('image')->store('articles','public');
+        }
+        $article->update($data);
+        return redirect()->route('articles.index')->with('success', 'Modifié avec sucess');
     }
 
     /**
@@ -86,6 +103,6 @@ class ArticleController extends Controller
     public function destroy(Article $article)
     {
         $article->delete();
-        return redirect()->route('articles.index')->with('success','Supprimer avec success');
+        return redirect()->route('articles.index')->with('success', 'Supprimer avec success');
     }
 }

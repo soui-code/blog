@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Article extends Model
 {
-    protected $fillable = ['title','content'];
+    protected $fillable = ['title','content','date_publication','image','user_id'];
 
-    //Lien avec users
-    public function users() {
+    //Lien avec Article
+    public function user() {
       return $this->belongsTo(User::class);
     }
 }

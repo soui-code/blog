@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'image',
     ];
 
     /**
@@ -45,8 +46,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    //Lien avec post
-    public function articles{
+    //Lien avec User
+    public function articles(){
         return $this->hasMany(Article::class);
     }
 }

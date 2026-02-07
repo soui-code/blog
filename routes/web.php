@@ -1,21 +1,25 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Models\Article;
-use App\Models\User;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/profil',function(){
-    return view('profil');
-});
-Route::get('test-article',function(){
-    Article::create([
-      'title'=>'Mon premier article',
-      'content'=>"pas grand chose"
-    ]);
-    return 'article crée';
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 Route::resource('articles',ArticleController::class);
+// Route::get('/articles',[ArticleController::class,'edit'])->middleware('auth');
+Route::resource('user',UserController::class)->middleware('auth');
+Route::get('/myarticle',[ArticleController::class,'myarticle'])->middleware('auth')->name('myarticle');
+require __DIR__.'/auth.php';
